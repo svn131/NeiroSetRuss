@@ -8,3 +8,4 @@ public class Neuron {
     Map<Neuron, Double> axons = new HashMap<>();
 
 }
+
