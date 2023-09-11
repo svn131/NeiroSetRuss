@@ -4,8 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Neuron {
-    double value;
-    Map<Neuron, Double> axons = new HashMap<>();
-
+    double znachenie;
+    Map<Neuron, Double> aksyon = new HashMap<>();
 }
 

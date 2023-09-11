@@ -8,105 +8,98 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class MainResult1 {
-    static List<Neuron> inputNeurons = List.of(new Neuron(), new Neuron());
-    static List<Neuron> hideNeurons = List.of(new Neuron(), new Neuron());
-    static Neuron outputNeuron = new Neuron();
+    static List<Neuron> vhodnieNeironi = List.of(new Neuron(), new Neuron());
+    static List<Neuron> skrytieNeironi = List.of(new Neuron(), new Neuron());
+    static Neuron vyhodnoiNeiron = new Neuron();
+
     public static void main(String[] args) throws IOException {
         Random rnd = new Random();
         Scanner scn = new Scanner(System.in);
 
-        for (Neuron inputNeuron : inputNeurons) {
-            for (Neuron hideNeuron : hideNeurons) {
-                inputNeuron.axons.put(hideNeuron, rnd.nextDouble(-0.5, 0.5));
+        for (Neuron vhodnoiNeiron : vhodnieNeironi) {
+            for (Neuron skrytieNeiron : skrytieNeironi) {
+                vhodnoiNeiron.aksyon.put(skrytieNeiron, rnd.nextDouble(-0.5, 0.5));
             }
         }
 
-        for (Neuron hideNeuron : hideNeurons) {
-            hideNeuron.axons.put(outputNeuron, rnd.nextDouble(-0.5, 0.5));
+        for (Neuron skrytieNeiron : skrytieNeironi) {
+            skrytieNeiron.aksyon.put(vyhodnoiNeiron, rnd.nextDouble(-0.5, 0.5));
         }
+
         training("src/neuron/training1.txt");
 
-        System.out.print("Есть ли оружие? (введите да/нет): ");
+        System.out.print("Est' li oruzhie? (vvedite da/net): ");
         String val1 = scn.next();
-        System.out.print("Разница уровней меньше 2? (введите да/нет): ");
+        System.out.print("Raznitsa urovnei men'she 2? (vvedite da/net): ");
         String val2 = scn.next();
-        inputNeurons.get(0).value = val1.equalsIgnoreCase("да")?1:0;
-        inputNeurons.get(1).value = val2.equalsIgnoreCase("да")?1:0;
 
+        vhodnieNeironi.get(0).znachenie = val1.equalsIgnoreCase("da") ? 1 : 0;
+        vhodnieNeironi.get(1).znachenie = val2.equalsIgnoreCase("da") ? 1 : 0;
 
         double res = calc();
 
-        System.out.println("res = "+res);
-        System.out.println(res>0.5?"Атакуем":"Бежим");
-
-
+        System.out.println("res = " + res);
+        System.out.println(res > 0.5 ? "Atakuyem" : "Bezhim");
     }
-    //Наличие оружия
-    //Разница уровней меньше 2
+
     static void training(String trainingFilePath) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(trainingFilePath));
         for (int i = 0; i < 100; i++) {
-
-
             for (String line : lines) {
                 String[] data = line.split(" ");
                 int index = 0;
-                for (int j = 0; j < inputNeurons.size(); j++) {
-                    inputNeurons.get(j).value = Double.valueOf(data[index++]);
+                for (int j = 0; j < vhodnieNeironi.size(); j++) {
+                    vhodnieNeironi.get(j).znachenie = Double.valueOf(data[index++]);
                 }
-                double expectedResult = Double.valueOf(data[index]);
-                double totalValue = calc();
-                double result = totalValue > 0.5 ? 1 : 0;
-                if (result != expectedResult) {
-                    resolveWeights(totalValue, expectedResult);
+                double ozhidayemiyRezultat = Double.valueOf(data[index]);
+                double obscheyeZnacheniye = calc();
+                double rezultat = obscheyeZnacheniye > 0.5 ? 1 : 0;
+                if (rezultat != ozhidayemiyRezultat) {
+                    resolveWeights(obscheyeZnacheniye, ozhidayemiyRezultat);
                 }
             }
         }
     }
 
+    static void resolveWeights(double obscheyeZnacheniye, double ozhidayemoyeZnacheniye) {
+        double oshibka = obscheyeZnacheniye - ozhidayemoyeZnacheniye;
+        double delta = oshibka * (1 - oshibka);
 
-
-
-    static void resolveWeights(double totalValue, double expectedValue){
-        double error = totalValue-expectedValue;
-        double delta = error*(1-error);
-        for (Neuron hideNeuron : hideNeurons) {
-            Double oldWeight = hideNeuron.axons.get(outputNeuron);
-            hideNeuron.axons.put(outputNeuron, oldWeight - hideNeuron.value*delta*0.3);
+        for (Neuron skrytieNeiron : skrytieNeironi) {
+            Double stariyeVesa = skrytieNeiron.aksyon.get(vyhodnoiNeiron);
+            skrytieNeiron.aksyon.put(vyhodnoiNeiron, stariyeVesa - skrytieNeiron.znachenie * delta * 0.3);
         }
-        for (Neuron hideNeuron : hideNeurons) {
-            double error2 = hideNeuron.axons.get(outputNeuron) * delta;
-            double delta2 = error2*(1-error2);
-            for (Neuron inputNeuron : inputNeurons) {
-                Double oldWeight = inputNeuron.axons.get(hideNeuron);
-                inputNeuron.axons.put(hideNeuron, oldWeight - inputNeuron.value*delta2*0.3);
+
+        for (Neuron skrytieNeiron : skrytieNeironi) {
+            double oshibka2 = skrytieNeiron.aksyon.get(vyhodnoiNeiron) * delta;
+            double delta2 = oshibka2 * (1 - oshibka2);
+
+            for (Neuron vhodnoiNeiron : vhodnieNeironi) {
+                Double stariyeVesa = vhodnoiNeiron.aksyon.get(skrytieNeiron);
+                vhodnoiNeiron.aksyon.put(skrytieNeiron, stariyeVesa - vhodnoiNeiron.znachenie * delta2 * 0.3);
             }
         }
-
     }
 
-    static double calc(){
-
-        for (Neuron hideNeuron : hideNeurons) {
-            double sum = 0;
-            for (Neuron inputNeuron : inputNeurons) {
-                sum+=inputNeuron.value*inputNeuron.axons.get(hideNeuron);
+    static double calc() {
+        for (Neuron skrytieNeiron : skrytieNeironi) {
+            double suma = 0;
+            for (Neuron vhodnoiNeiron : vhodnieNeironi) {
+                suma += vhodnoiNeiron.znachenie * vhodnoiNeiron.aksyon.get(skrytieNeiron);
             }
-            hideNeuron.value = sigma(sum);
+            skrytieNeiron.znachenie = sigma(suma);
         }
-        double sum = 0;
-        for (Neuron hideNeuron : hideNeurons) {
-            sum+=hideNeuron.value*hideNeuron.axons.get(outputNeuron);
+
+        double suma = 0;
+        for (Neuron skrytieNeiron : skrytieNeironi) {
+            suma += skrytieNeiron.znachenie * skrytieNeiron.aksyon.get(vyhodnoiNeiron);
         }
-        outputNeuron.value = sigma(sum);
-        return outputNeuron.value;
+
+        vyhodnoiNeiron.znachenie = sigma(suma);
+        return vyhodnoiNeiron.znachenie;
     }
 
-    static double sigma(double totalWeight){
-        return 1/(1+Math.pow(Math.E, -totalWeight));
+    static double sigma(double obscheyeVeseniye) {
+        return 1 / (1 + Math.pow(Math.E, -obscheyeVeseniye));
     }
-
-
-
 }
-
